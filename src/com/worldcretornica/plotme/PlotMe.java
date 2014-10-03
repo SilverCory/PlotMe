@@ -50,6 +50,8 @@ public class PlotMe extends JavaPlugin
     public static Boolean allowWorldTeleport;
     public static Boolean autoUpdate;
     public static Boolean allowToDeny;
+	public static Integer asyncOperations;
+	public static Integer blocksPerTick;
     
     public static ConcurrentHashMap<String, PlotMapInfo> plotmaps = null;
     
@@ -103,6 +105,8 @@ public class PlotMe extends JavaPlugin
 		defaultWEAnywhere = null;
 		self = null;
 		allowToDeny = null;
+		asyncOperations = null;
+		blocksPerTick = null;
 		initialized = null;
 	}
 	
@@ -288,6 +292,8 @@ public class PlotMe extends JavaPlugin
 		defaultWEAnywhere = config.getBoolean("defaultWEAnywhere", false);
 		autoUpdate = config.getBoolean("auto-update", false);
 		allowToDeny = config.getBoolean("allowToDeny", true);
+		asyncOperations = config.getInt("asyncOperations", 3);
+		blocksPerTick = config.getInt("blocksPerTick", 1000);
 
 		ConfigurationSection worlds;
 		
@@ -505,6 +511,8 @@ public class PlotMe extends JavaPlugin
 		config.set("defaultWEAnywhere", defaultWEAnywhere);
 		config.set("auto-update", autoUpdate);
 		config.set("allowToDeny", allowToDeny);
+		config.set("asyncOperations", asyncOperations);
+		config.set("blocksPerTick", blocksPerTick);
 		
 		try 
 		{
@@ -813,6 +821,8 @@ public class PlotMe extends JavaPlugin
 		properties.put("MsgReloadedConfigurations","reloaded configurations");
 		properties.put("MsgNoPlotworldFound","No Plot world found.");
 		properties.put("MsgWorldNotPlot","does not exist or is not a plot world.");
+		properties.put("MsgPlotAsyncRunning","is busy processing another task.");
+		properties.put("MsgAsyncOperationLimit","The server is currently processing the maximum number of plots. Try again later!");
 		
 		properties.put("ConsoleHelpMain", " ---==PlotMe Console Help Page==---");
 		properties.put("ConsoleHelpReload", " - Reloads the plugin and its configuration files");

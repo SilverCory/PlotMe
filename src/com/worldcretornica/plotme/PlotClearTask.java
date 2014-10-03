@@ -103,7 +103,7 @@ public class PlotClearTask extends BukkitRunnable
 			{
 				Block block;
 
-				for(int i = 0; i < 1000 && (block = blocks.poll()) != null; ++i)
+				for(int i = 0; i < PlotMe.blocksPerTick && (block = blocks.poll()) != null; ++i)
 				{
 					if (!block.getChunk().isLoaded()) {
 						block.getChunk().load(true);
@@ -158,6 +158,7 @@ public class PlotClearTask extends BukkitRunnable
 
 					PlotManager.adjustWall(bottom);
 					PlotManager.RemoveLWC(w, plot);
+					PlotManager.setAsyncRunning(w, plot, false);
 				}
 			}
 		}.runTaskTimer(PlotMe.self, 0, 1);

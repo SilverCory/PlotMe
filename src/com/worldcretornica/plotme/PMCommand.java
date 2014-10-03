@@ -2563,27 +2563,35 @@ public class PMCommand implements CommandExecutor {
 							final PlotClearTask clearTask = PlotManager.clear(w, plot);
 							final double finalPrice = price;
 
-							new BukkitRunnable()
-							{
-								@Override
-								public void run()
+							if (clearTask == null) {
+								if (PlotManager.isAsyncRunning(w, plot)) {
+									Send(p, RED + C("MsgThisPlot") + "(" + id + ") " + C("MsgPlotAsyncRunning"));
+								} else {
+									Send(p, RED + C("MsgAsyncOperationLimit"));
+								}
+							} else {
+								new BukkitRunnable()
 								{
-									BukkitTask timerTask = clearTask.getTimerTask();
-
-									if(timerTask != null &&
-										!Bukkit.getScheduler().isCurrentlyRunning(timerTask.getTaskId()) &&
-										!Bukkit.getScheduler().isQueued(timerTask.getTaskId()))
+									@Override
+									public void run()
 									{
-										cancel();
+										BukkitTask timerTask = clearTask.getTimerTask();
 
-										Send(p, C("MsgPlotCleared") + " " + f(-finalPrice));
+										if(timerTask != null &&
+												!Bukkit.getScheduler().isCurrentlyRunning(timerTask.getTaskId()) &&
+												!Bukkit.getScheduler().isQueued(timerTask.getTaskId()))
+										{
+											cancel();
 
-										if (isAdv) {
-											PlotMe.logger.info(LOG + playername + " " + C("MsgClearedPlot") + " " + id + ((finalPrice != 0) ? " " + C("WordFor") + " " + finalPrice : ""));
+											Send(p, C("MsgPlotCleared") + " " + f(-finalPrice));
+
+											if (isAdv) {
+												PlotMe.logger.info(LOG + playername + " " + C("MsgClearedPlot") + " " + id + ((finalPrice != 0) ? " " + C("WordFor") + " " + finalPrice : ""));
+											}
 										}
 									}
-								}
-							}.runTaskTimerAsynchronously(PlotMe.self, 1, 1);
+								}.runTaskTimerAsynchronously(PlotMe.self, 1, 1);
+							}
 						} else {
 							Send(p, RED + C("MsgThisPlot") + "(" + id + ") " + C("MsgNotYoursNotAllowedClear"));
 						}

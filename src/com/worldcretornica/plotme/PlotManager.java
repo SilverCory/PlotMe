@@ -3,7 +3,9 @@ package com.worldcretornica.plotme;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 
 import org.bukkit.Bukkit;
@@ -24,6 +26,8 @@ import com.griefcraft.model.Protection;
 
 public class PlotManager
 {
+	private static Set<String> asyncOperations = new HashSet<>();
+
 	public static String getPlotId(Location loc)
 	{
 		PlotMapInfo pmi = getMap(loc);
@@ -616,10 +620,34 @@ public class PlotManager
 		return new Location(w, PlotManager.bottomX(plot.id, w), 0, PlotManager.bottomZ(plot.id, w));
 	}
 
+	public static boolean isAsyncRunning(World w, Plot plot)
+	{
+		return asyncOperations.contains(w.getName() + ";" + plot.id);
+	}
+
+	public static boolean setAsyncRunning(World w, Plot plot, boolean asyncRunning)
+	{
+		String key = w.getName() + ";" + plot.id;
+
+		if (asyncRunning)
+		{
+			return asyncOperations.size() < PlotMe.asyncOperations && asyncOperations.add(key);
+		}
+		else
+		{
+			return asyncOperations.remove(key);
+		}
+	}
+
 	@SuppressWarnings("deprecation")
     public static PlotClearTask clear(World w, Plot plot)
 	{
-        Location bottom = getBottom(w, plot);
+        if (isAsyncRunning(w, plot) || !setAsyncRunning(w, plot, true))
+		{
+			return null;
+		}
+
+		Location bottom = getBottom(w, plot);
         Location top = getTop(w, plot);
 		PlotMapInfo pmi = getMap(bottom);
 
