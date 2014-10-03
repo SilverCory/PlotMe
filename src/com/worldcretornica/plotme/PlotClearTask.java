@@ -81,12 +81,12 @@ public class PlotClearTask extends BukkitRunnable
 					}
 					else
 					{
-						if(y == (pmi.RoadHeight + 1) &&
+						/*if(y == (pmi.RoadHeight + 1) &&
 							(x == bottomX - 1 || x == topX + 1 || z == bottomZ - 1 || z == topZ + 1))
 						{
 
-						}
-						else if(block.getType() != Material.AIR || block.getBiome() != Biome.PLAINS)
+						}*/
+						if(block.getType() != Material.AIR || block.getBiome() != Biome.PLAINS)
 						{
 							blocks.add(block);
 						}
@@ -105,6 +105,10 @@ public class PlotClearTask extends BukkitRunnable
 
 				for(int i = 0; i < 1000 && (block = blocks.poll()) != null; ++i)
 				{
+					if (!block.getChunk().isLoaded()) {
+						block.getChunk().load(true);
+					}
+
 					if (block.getBiome() != Biome.PLAINS)
 					{
 						block.setBiome(Biome.PLAINS);
