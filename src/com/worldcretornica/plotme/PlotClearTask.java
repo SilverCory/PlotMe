@@ -1,5 +1,6 @@
 package com.worldcretornica.plotme;
 
+import com.earth2me.essentials.Essentials;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -9,6 +10,7 @@ import org.bukkit.block.Block;
 import org.bukkit.block.BlockState;
 import org.bukkit.block.Jukebox;
 import org.bukkit.inventory.InventoryHolder;
+import org.bukkit.plugin.Plugin;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.scheduler.BukkitTask;
 
@@ -96,16 +98,25 @@ public class PlotClearTask extends BukkitRunnable
 		}
 
 		final int asyncTaskId = getTaskId();
+		final Plugin essentials = Bukkit.getPluginManager().getPlugin("Essentials");
+
 		timerTask = new BukkitRunnable()
 		{
 			@Override
 			public void run()
 			{
 				Block block;
+				int blocksPerTick = PlotMe.blocksPerTick;
 
-				for(int i = 0; i < PlotMe.blocksPerTick && (block = blocks.poll()) != null; ++i)
+				if (essentials != null)
 				{
-					if (!block.getChunk().isLoaded()) {
+					blocksPerTick *= ((Essentials) essentials).getTimer().getAverageTPS() / 20D;
+				}
+
+				for(int i = 0; i < blocksPerTick && (block = blocks.poll()) != null; ++i)
+				{
+					if (!block.getChunk().isLoaded())
+					{
 						block.getChunk().load(true);
 					}
 
