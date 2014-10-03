@@ -15,6 +15,8 @@ import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
+import org.bukkit.scheduler.BukkitRunnable;
+import org.bukkit.scheduler.BukkitTask;
 
 import java.util.*;
 
@@ -2517,12 +2519,12 @@ public class PMCommand implements CommandExecutor {
 		return true;
 	}
 
-	private boolean clear(Player p, String[] args) {
+	private boolean clear(final Player p, String[] args) {
 		if (PlotMe.cPerms(p, "PlotMe.admin.clear") || PlotMe.cPerms(p, "PlotMe.use.clear")) {
 			if (!PlotManager.isPlotWorld(p)) {
 				Send(p, RED + C("MsgNotPlotWorld"));
 			} else {
-				String id = PlotManager.getPlotId(p.getLocation());
+				final String id = PlotManager.getPlotId(p.getLocation());
 				if (id.equals("")) {
 					Send(p, RED + C("MsgNoPlotFound"));
 				} else if (!PlotManager.isPlotAvailable(id, p)) {
@@ -2531,7 +2533,7 @@ public class PMCommand implements CommandExecutor {
 					if (plot.protect) {
 						Send(p, RED + C("MsgPlotProtectedCannotClear"));
 					} else {
-						String playername = p.getName();
+						final String playername = p.getName();
 
 						if (plot.owner.equalsIgnoreCase(playername) || PlotMe.cPerms(p, "PlotMe.admin.clear")) {
 							World w = p.getWorld();
@@ -2558,15 +2560,30 @@ public class PMCommand implements CommandExecutor {
 								}
 							}
 
-							PlotManager.clear(w, plot);
-							//RemoveLWC(w, plot, p);
-							//PlotManager.regen(w, plot);
+							final PlotClearTask clearTask = PlotManager.clear(w, plot);
+							final double finalPrice = price;
 
-							Send(p, C("MsgPlotCleared") + " " + f(-price));
+							new BukkitRunnable()
+							{
+								@Override
+								public void run()
+								{
+									BukkitTask timerTask = clearTask.getTimerTask();
 
-							if (isAdv) {
-								PlotMe.logger.info(LOG + playername + " " + C("MsgClearedPlot") + " " + id + ((price != 0) ? " " + C("WordFor") + " " + price : ""));
-							}
+									if(timerTask != null &&
+										!Bukkit.getScheduler().isCurrentlyRunning(timerTask.getTaskId()) &&
+										!Bukkit.getScheduler().isQueued(timerTask.getTaskId()))
+									{
+										cancel();
+
+										Send(p, C("MsgPlotCleared") + " " + f(-finalPrice));
+
+										if (isAdv) {
+											PlotMe.logger.info(LOG + playername + " " + C("MsgClearedPlot") + " " + id + ((finalPrice != 0) ? " " + C("WordFor") + " " + finalPrice : ""));
+										}
+									}
+								}
+							}.runTaskTimerAsynchronously(PlotMe.self, 1, 1);
 						} else {
 							Send(p, RED + C("MsgThisPlot") + "(" + id + ") " + C("MsgNotYoursNotAllowedClear"));
 						}
