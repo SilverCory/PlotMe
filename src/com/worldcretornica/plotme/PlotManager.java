@@ -620,14 +620,19 @@ public class PlotManager
 		return new Location(w, PlotManager.bottomX(plot.id, w), 0, PlotManager.bottomZ(plot.id, w));
 	}
 
-	public static boolean isAsyncRunning(World w, Plot plot)
+	public static boolean isAsyncRunning(World w, String id)
 	{
-		return asyncOperations.contains(w.getName() + ";" + plot.id);
+		return asyncOperations.contains(w.getName() + ";" + id);
 	}
 
-	public static boolean setAsyncRunning(World w, Plot plot, boolean asyncRunning)
+	public static boolean isAsyncRunning(World w, Plot plot)
 	{
-		String key = w.getName() + ";" + plot.id;
+		return isAsyncRunning(w, plot.id);
+	}
+
+	public static boolean setAsyncRunning(World w, String id, boolean asyncRunning)
+	{
+		String key = w.getName() + ";" + id;
 
 		if (asyncRunning)
 		{
@@ -637,6 +642,11 @@ public class PlotManager
 		{
 			return asyncOperations.remove(key);
 		}
+	}
+
+	public static boolean setAsyncRunning(World w, Plot plot, boolean asyncRunning)
+	{
+		return setAsyncRunning(w, plot.id, asyncRunning);
 	}
 
 	@SuppressWarnings("deprecation")
