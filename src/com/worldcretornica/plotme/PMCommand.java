@@ -16,7 +16,6 @@ import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.scheduler.BukkitRunnable;
-import org.bukkit.scheduler.BukkitTask;
 
 import java.util.*;
 
@@ -2494,6 +2493,19 @@ public class PMCommand implements CommandExecutor {
 		return true;
 	}
 
+	private boolean checkAsyncAvailable(World w, String id, Player p) {
+		if (!PlotManager.isAsyncRunning(w, id)) {
+			return true;
+		}
+
+		Send(p, RED + C("MsgThisPlot") + "(" + id + ") " + C("MsgPlotAsyncRunning"));
+		return false;
+	}
+
+	private boolean checkAsyncAvailable(World w, Plot plot, Player p) {
+		return checkAsyncAvailable(w, plot.id, p);
+	}
+
 	private boolean reset(final Player p, String[] args) {
 		if (PlotMe.cPerms(p, "PlotMe.admin.reset")) {
 			if (!PlotManager.isPlotWorld(p)) {
@@ -2509,8 +2521,7 @@ public class PMCommand implements CommandExecutor {
 					final String id = plot.id;
 					final World w = p.getWorld();
 
-					if (PlotManager.isAsyncRunning(w, plot)) {
-						Send(p, RED + C("MsgThisPlot") + "(" + id + ") " + C("MsgPlotAsyncRunning"));
+					if (!checkAsyncAvailable(w, plot, p)) {
 						return true;
 					}
 
@@ -2519,7 +2530,7 @@ public class PMCommand implements CommandExecutor {
 					}
 
 					PlotManager.setBiome(w, id, plot, Biome.PLAINS);
-					final PlotClearTask clearTask = PlotManager.clear(w, plot);
+					PlotClearTask clearTask = PlotManager.clear(w, plot);
 					//RemoveLWC(w, plot);
 
 					if (clearTask == null) {
@@ -2527,54 +2538,30 @@ public class PMCommand implements CommandExecutor {
 						return true;
 					}
 
-					new BukkitRunnable()
-					{
+					new BukkitRunnable() {
 						@Override
 						public void run() {
-							BukkitTask timerTask = clearTask.getTimerTask();
+							if (PlotManager.isAsyncRunning(w, plot)) {
+								return;
+							}
 
-							if(timerTask != null &&
-									!Bukkit.getScheduler().isCurrentlyRunning(timerTask.getTaskId()) &&
-									!Bukkit.getScheduler().isQueued(timerTask.getTaskId()))
-							{
-								cancel();
+							cancel();
 
-								if (PlotManager.isEconomyEnabled(p)) {
-									if (plot.auctionned) {
-										String currentbidder = plot.currentbidder;
+							if (PlotManager.isEconomyEnabled(p)) {
+								if (plot.auctionned) {
+									String currentbidder = plot.currentbidder;
 
-										if (!currentbidder.equals("")) {
-											OfflinePlayer playercurrentbidder = Bukkit.getOfflinePlayer(plot.currentbidderId);
-											EconomyResponse er = PlotMe.economy.depositPlayer(playercurrentbidder, plot.currentbid);
-
-											if (!er.transactionSuccess()) {
-												Send(p, er.errorMessage);
-												warn(er.errorMessage);
-											} else {
-												for (Player player : Bukkit.getServer().getOnlinePlayers()) {
-													if (player.getName().equalsIgnoreCase(currentbidder)) {
-														Send(player, C("WordPlot") + " " + id + " " + C("MsgOwnedBy") + " " + plot.owner + " " + C("MsgWasReset") + " " + f(plot.currentbid));
-														break;
-													}
-												}
-											}
-										}
-									}
-
-									PlotMapInfo pmi = PlotManager.getMap(p);
-
-									if (pmi.RefundClaimPriceOnReset) {
-										OfflinePlayer playerowner = Bukkit.getOfflinePlayer(plot.ownerId);
-										EconomyResponse er = PlotMe.economy.depositPlayer(playerowner, pmi.ClaimPrice);
+									if (!currentbidder.equals("")) {
+										OfflinePlayer playercurrentbidder = Bukkit.getOfflinePlayer(plot.currentbidderId);
+										EconomyResponse er = PlotMe.economy.depositPlayer(playercurrentbidder, plot.currentbid);
 
 										if (!er.transactionSuccess()) {
-											Send(p, RED + er.errorMessage);
+											Send(p, er.errorMessage);
 											warn(er.errorMessage);
-											return;
 										} else {
 											for (Player player : Bukkit.getServer().getOnlinePlayers()) {
-												if (player.getName().equalsIgnoreCase(plot.owner)) {
-													Send(player, C("WordPlot") + " " + id + " " + C("MsgOwnedBy") + " " + plot.owner + " " + C("MsgWasReset") + " " + f(pmi.ClaimPrice));
+												if (player.getName().equalsIgnoreCase(currentbidder)) {
+													Send(player, C("WordPlot") + " " + id + " " + C("MsgOwnedBy") + " " + plot.owner + " " + C("MsgWasReset") + " " + f(plot.currentbid));
 													break;
 												}
 											}
@@ -2582,22 +2569,42 @@ public class PMCommand implements CommandExecutor {
 									}
 								}
 
-								if (!PlotManager.isPlotAvailable(id, p)) {
-									PlotManager.getPlots(p).remove(id);
+								PlotMapInfo pmi = PlotManager.getMap(p);
+
+								if (pmi.RefundClaimPriceOnReset) {
+									OfflinePlayer playerowner = Bukkit.getOfflinePlayer(plot.ownerId);
+									EconomyResponse er = PlotMe.economy.depositPlayer(playerowner, pmi.ClaimPrice);
+
+									if (!er.transactionSuccess()) {
+										Send(p, RED + er.errorMessage);
+										warn(er.errorMessage);
+										return;
+									} else {
+										for (Player player : Bukkit.getServer().getOnlinePlayers()) {
+											if (player.getName().equalsIgnoreCase(plot.owner)) {
+												Send(player, C("WordPlot") + " " + id + " " + C("MsgOwnedBy") + " " + plot.owner + " " + C("MsgWasReset") + " " + f(pmi.ClaimPrice));
+												break;
+											}
+										}
+									}
 								}
+							}
 
-								String name = p.getName();
+							if (!PlotManager.isPlotAvailable(id, p)) {
+								PlotManager.getPlots(p).remove(id);
+							}
 
-								PlotManager.removeOwnerSign(w, id);
-								PlotManager.removeSellSign(w, id);
+							String name = p.getName();
 
-								SqlManager.deletePlot(PlotManager.getIdX(id), PlotManager.getIdZ(id), w.getName().toLowerCase());
+							PlotManager.removeOwnerSign(w, id);
+							PlotManager.removeSellSign(w, id);
 
-								Send(p, C("MsgPlotReset"));
+							SqlManager.deletePlot(PlotManager.getIdX(id), PlotManager.getIdZ(id), w.getName().toLowerCase());
 
-								if (isAdv) {
-									PlotMe.logger.info(LOG + name + " " + C("MsgResetPlot") + " " + id);
-								}
+							Send(p, C("MsgPlotReset"));
+
+							if (isAdv) {
+								PlotMe.logger.info(LOG + name + " " + C("MsgResetPlot") + " " + id);
 							}
 						}
 					}.runTaskTimer(PlotMe.self, 1, 1);
@@ -2618,7 +2625,7 @@ public class PMCommand implements CommandExecutor {
 				if (id.equals("")) {
 					Send(p, RED + C("MsgNoPlotFound"));
 				} else if (!PlotManager.isPlotAvailable(id, p)) {
-					Plot plot = PlotManager.getPlotById(p, id);
+					final Plot plot = PlotManager.getPlotById(p, id);
 
 					if (plot.protect) {
 						Send(p, RED + C("MsgPlotProtectedCannotClear"));
@@ -2626,14 +2633,9 @@ public class PMCommand implements CommandExecutor {
 						final String playername = p.getName();
 
 						if (plot.owner.equalsIgnoreCase(playername) || PlotMe.cPerms(p, "PlotMe.admin.clear")) {
-							World w = p.getWorld();
+							final World w = p.getWorld();
 
-							if (PlotManager.isAsyncRunning(w, plot)) {
-								Send(p, RED + C("MsgThisPlot") + "(" + id + ") " + C("MsgPlotAsyncRunning"));
-								return true;
-							}
-
-							if (!checkAndSetCooldown(p)) {
+							if (!checkAsyncAvailable(w, plot, p) || !checkAndSetCooldown(p)) {
 								return true;
 							}
 
@@ -2674,17 +2676,10 @@ public class PMCommand implements CommandExecutor {
 
 							final double finalPrice = price;
 
-							new BukkitRunnable()
-							{
+							new BukkitRunnable() {
 								@Override
-								public void run()
-								{
-									BukkitTask timerTask = clearTask.getTimerTask();
-
-									if(timerTask != null &&
-											!Bukkit.getScheduler().isCurrentlyRunning(timerTask.getTaskId()) &&
-											!Bukkit.getScheduler().isQueued(timerTask.getTaskId()))
-									{
+								public void run() {
+									if (!PlotManager.isAsyncRunning(w, plot)) {
 										cancel();
 
 										Send(p, C("MsgPlotCleared") + " " + f(-finalPrice));
@@ -3143,10 +3138,10 @@ public class PMCommand implements CommandExecutor {
 					Send(p, C("WordUsage") + ": " + RED + "/plotme " + C("CommandMove") + " <" + C("WordIdFrom") + "> <" + C("WordIdTo") + "> " +
 								RESET + C("WordExample") + ": " + RED + "/plotme " + C("CommandMove") + " 0;1 2;-1");
 					return true;
-				} else if (PlotManager.isAsyncRunning(p.getWorld(), plot1)) {
-					Send(p, RED + C("MsgThisPlot") + "(" + plot1 + ") " + C("MsgPlotAsyncRunning"));
-				} else if (PlotManager.isAsyncRunning(p.getWorld(), plot2)) {
-					Send(p, RED + C("MsgThisPlot") + "(" + plot2 + ") " + C("MsgPlotAsyncRunning"));
+				} else if (!checkAsyncAvailable(p.getWorld(), plot1, p)) {
+					//Send(p, RED + C("MsgThisPlot") + "(" + plot1 + ") " + C("MsgPlotAsyncRunning"));
+				} else if (!checkAsyncAvailable(p.getWorld(), plot2, p)) {
+					//Send(p, RED + C("MsgThisPlot") + "(" + plot2 + ") " + C("MsgPlotAsyncRunning"));
 				} else if (PlotManager.movePlot(p.getWorld(), plot1, plot2)) {
 					Send(p, C("MsgPlotMovedSuccess"));
 

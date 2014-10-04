@@ -67,6 +67,7 @@ public class PlotMe extends JavaPlugin
     public static World worldcurrentlyprocessingexpired;
     public static CommandSender cscurrentlyprocessingexpired;
     public static Integer counterexpired;
+	public static Integer counterdeletingexpired;
     public static Integer nbperdeletionprocessingexpired;
     public static Boolean defaultWEAnywhere;
     

@@ -5,8 +5,8 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 
-import org.bukkit.ChatColor;
 import org.bukkit.World;
+import org.bukkit.scheduler.BukkitRunnable;
 
 public class PlotRunnableDeleteExpire implements Runnable {
 
@@ -14,18 +14,20 @@ public class PlotRunnableDeleteExpire implements Runnable {
 	{
 		if(PlotMe.worldcurrentlyprocessingexpired != null)
 		{
-			World w = PlotMe.worldcurrentlyprocessingexpired;
+			final World w = PlotMe.worldcurrentlyprocessingexpired;
 			List<Plot> expiredplots = new ArrayList<Plot>();
 			HashMap<String, Plot> plots = PlotManager.getPlots(w);
 			String date = PlotMe.getDate();
-			Plot expiredplot;
 			
 			for(String id : plots.keySet())
 			{
 				Plot plot = plots.get(id);
 				
-				if(!plot.protect && !plot.finished && plot.expireddate != null && PlotMe.getDate(plot.expireddate).compareTo(date.toString()) < 0)
+				if(!plot.protect && !plot.finished && plot.expireddate != null &&
+						PlotMe.getDate(plot.expireddate).compareTo(date.toString()) < 0 &&
+						PlotManager.isAsyncRunning(w, plot))
 				{
+					PlotMe.counterdeletingexpired++;
 					expiredplots.add(plot);
 				}
 				
@@ -41,46 +43,68 @@ public class PlotRunnableDeleteExpire implements Runnable {
 			}
 			else
 			{
-				plots = null;
-				
 				Collections.sort(expiredplots);
-				
-				String ids = "";
 				
 				for(int ictr = 0; ictr < PlotMe.nbperdeletionprocessingexpired && expiredplots.size() > 0; ictr++)
 				{
-					expiredplot = expiredplots.get(0);
+					final Plot expiredplot = expiredplots.get(0);
 					
 					expiredplots.remove(0);
-					
-					PlotManager.clear(w, expiredplot);
-					
-					String id = expiredplot.id;
-					ids += ChatColor.RED + id + ChatColor.RESET + ", ";
-					
-					PlotManager.getPlots(w).remove(id);
-						
-					PlotManager.removeOwnerSign(w, id);
-					PlotManager.removeSellSign(w, id);
-										
-					SqlManager.deletePlot(PlotManager.getIdX(id), PlotManager.getIdZ(id), w.getName().toLowerCase());
-					
+
+					PlotClearTask clearTask = PlotManager.clear(w, expiredplot);
+
+					if(clearTask == null)
+					{
+						continue;
+					}
+
+					new BukkitRunnable()
+					{
+						@Override
+						public void run()
+						{
+							if (!PlotManager.isAsyncRunning(w, expiredplot))
+							{
+								cancel();
+
+								String id = expiredplot.id;
+
+								PlotManager.getPlots(w).remove(id);
+
+								PlotManager.removeOwnerSign(w, id);
+								PlotManager.removeSellSign(w, id);
+
+								SqlManager.deletePlot(PlotManager.getIdX(id), PlotManager.getIdZ(id), w.getName().toLowerCase());
+
+								PlotMe.cscurrentlyprocessingexpired.sendMessage("" + PlotMe.PREFIX + PlotMe.caption("MsgDeletedExpiredPlots") + " " + id);
+
+								PlotMe.counterdeletingexpired--;
+							}
+						}
+					}.runTaskTimer(PlotMe.self, 0, 1);
+
 					PlotMe.counterexpired--;
 				}
-				
-				if(ids.substring(ids.length() - 2).equals(", "))
-				{
-					ids = ids.substring(0, ids.length() - 2);
-				}
-				
-				PlotMe.cscurrentlyprocessingexpired.sendMessage("" + PlotMe.PREFIX + PlotMe.caption("MsgDeletedExpiredPlots") + " " + ids);
 			}
 			
 			if(PlotMe.counterexpired == 0)
 			{
-				PlotMe.cscurrentlyprocessingexpired.sendMessage("" + PlotMe.PREFIX + PlotMe.caption("MsgDeleteSessionFinished"));
-				PlotMe.worldcurrentlyprocessingexpired = null;
-				PlotMe.cscurrentlyprocessingexpired = null;
+				new BukkitRunnable()
+				{
+					@Override
+					public void run()
+					{
+						if (PlotMe.counterdeletingexpired == null || PlotMe.counterdeletingexpired <= 0)
+						{
+							cancel();
+
+							PlotMe.cscurrentlyprocessingexpired.sendMessage("" + PlotMe.PREFIX + PlotMe.caption("MsgDeleteSessionFinished"));
+							PlotMe.worldcurrentlyprocessingexpired = null;
+							PlotMe.cscurrentlyprocessingexpired = null;
+							PlotMe.counterdeletingexpired = null;
+						}
+					}
+				}.runTaskTimer(PlotMe.self, 0, 1);
 			}
 		}
 	}
