@@ -31,6 +31,7 @@ public class PMCommand implements CommandExecutor {
 	private final String PREFIX = PlotMe.PREFIX;
 	private final String LOG = "[" + PlotMe.NAME + " Event] ";
 	private final boolean isAdv = PlotMe.advancedlogging;
+	private final Map<UUID, Long> cooldowns = new HashMap<>();
 
 	public PMCommand(PlotMe instance) {
 		plugin = instance;
@@ -2433,6 +2434,66 @@ public class PMCommand implements CommandExecutor {
 		return true;
 	}
 
+	private boolean checkCooldown(Player p) {
+		Long expiry = cooldowns.get(p.getUniqueId());
+
+		if (PlotMe.cPerms(p, "PlotMe.admin.bypasscooldown") ||
+				expiry == null || (System.currentTimeMillis() - expiry) >= 0) {
+
+			return true;
+		}
+
+		long duration = expiry - System.currentTimeMillis();
+		int seconds, minutes, hours, days;
+		List<String> units = new ArrayList<String>();
+		Iterator<String> iterator;
+		String durationStr = "";
+		String unit;
+
+		duration /= 1000;
+		seconds = (int) (duration % 60);
+
+		duration /= 60;
+		minutes = (int) (duration % 60);
+
+		duration /= 60;
+		hours = (int) (duration % 24);
+
+		days = (int) (duration / 24);
+
+		if (days > 0) units.add(days + (days == 1 ? " day" : " days"));
+		if (hours > 0) units.add(hours + (hours == 1 ? " hour" : " hours"));
+		if (minutes > 0) units.add(minutes + (minutes == 1 ? " minute" : " minutes"));
+		if (seconds > 0) units.add(seconds + (seconds == 1 ? " second" : " seconds"));
+
+		iterator = units.iterator();
+
+		while (iterator.hasNext()) {
+			unit = iterator.next();
+
+			if (!durationStr.isEmpty()) {
+				durationStr += iterator.hasNext() ? ", " : " and ";
+			}
+
+			durationStr += unit;
+		}
+
+		Send(p, RED + C("MsgCommandCooldown") + " " + durationStr);
+		return false;
+	}
+
+	private boolean checkAndSetCooldown(Player p) {
+		if (!checkCooldown(p)) {
+			return false;
+		}
+
+		if (PlotMe.commandCooldown > 0) {
+			cooldowns.put(p.getUniqueId(), System.currentTimeMillis() + (PlotMe.commandCooldown * 60 * 1000));
+		}
+
+		return true;
+	}
+
 	private boolean reset(final Player p, String[] args) {
 		if (PlotMe.cPerms(p, "PlotMe.admin.reset")) {
 			if (!PlotManager.isPlotWorld(p)) {
@@ -2450,6 +2511,10 @@ public class PMCommand implements CommandExecutor {
 
 					if (PlotManager.isAsyncRunning(w, plot)) {
 						Send(p, RED + C("MsgThisPlot") + "(" + id + ") " + C("MsgPlotAsyncRunning"));
+						return true;
+					}
+
+					if (!checkAndSetCooldown(p)) {
 						return true;
 					}
 
@@ -2565,6 +2630,10 @@ public class PMCommand implements CommandExecutor {
 
 							if (PlotManager.isAsyncRunning(w, plot)) {
 								Send(p, RED + C("MsgThisPlot") + "(" + id + ") " + C("MsgPlotAsyncRunning"));
+								return true;
+							}
+
+							if (!checkAndSetCooldown(p)) {
 								return true;
 							}
 

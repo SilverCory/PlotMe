@@ -52,6 +52,7 @@ public class PlotMe extends JavaPlugin
     public static Boolean allowToDeny;
 	public static Integer asyncOperations;
 	public static Integer blocksPerTick;
+	public static Integer commandCooldown;
     
     public static ConcurrentHashMap<String, PlotMapInfo> plotmaps = null;
     
@@ -107,6 +108,7 @@ public class PlotMe extends JavaPlugin
 		allowToDeny = null;
 		asyncOperations = null;
 		blocksPerTick = null;
+		commandCooldown = null;
 		initialized = null;
 	}
 	
@@ -294,6 +296,7 @@ public class PlotMe extends JavaPlugin
 		allowToDeny = config.getBoolean("allowToDeny", true);
 		asyncOperations = config.getInt("asyncOperations", 3);
 		blocksPerTick = config.getInt("blocksPerTick", 1000);
+		commandCooldown = config.getInt("commandCooldown", 5);
 
 		ConfigurationSection worlds;
 		
@@ -513,6 +516,7 @@ public class PlotMe extends JavaPlugin
 		config.set("allowToDeny", allowToDeny);
 		config.set("asyncOperations", asyncOperations);
 		config.set("blocksPerTick", blocksPerTick);
+		config.set("commandCooldown", commandCooldown);
 		
 		try 
 		{
@@ -823,6 +827,7 @@ public class PlotMe extends JavaPlugin
 		properties.put("MsgWorldNotPlot","does not exist or is not a plot world.");
 		properties.put("MsgPlotAsyncRunning","is busy processing another task.");
 		properties.put("MsgAsyncOperationLimit","The server is currently processing the maximum number of plots. Try again later!");
+		properties.put("MsgCommandCooldown","You may use that command in");
 		
 		properties.put("ConsoleHelpMain", " ---==PlotMe Console Help Page==---");
 		properties.put("ConsoleHelpReload", " - Reloads the plugin and its configuration files");
