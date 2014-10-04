@@ -167,8 +167,22 @@ public class PlotClearTask extends BukkitRunnable
 				{
 					cancel();
 
-					PlotManager.adjustWall(bottom);
-					PlotManager.RemoveLWC(w, plot);
+					try
+					{
+						PlotManager.adjustWall(bottom);
+					} catch (Exception e)
+					{
+						e.printStackTrace();
+					}
+
+					try
+					{
+						PlotManager.RemoveLWC(w, plot);
+					} catch (Exception e)
+					{
+						e.printStackTrace();
+					}
+
 					PlotManager.setAsyncRunning(w, plot, false);
 				}
 			}
