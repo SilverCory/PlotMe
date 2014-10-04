@@ -2529,7 +2529,7 @@ public class PMCommand implements CommandExecutor {
 						return true;
 					}
 
-					PlotManager.setBiome(w, id, plot, Biome.PLAINS);
+					PlotManager.setBiome(w, id, plot, PlotManager.getMap(w).Biome);
 					PlotClearTask clearTask = PlotManager.clear(w, plot);
 					//RemoveLWC(w, plot);
 

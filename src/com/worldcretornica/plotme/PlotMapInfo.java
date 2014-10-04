@@ -1,10 +1,13 @@
 package com.worldcretornica.plotme;
 
+import org.bukkit.block.Biome;
+
 import java.util.HashMap;
 import java.util.List;
 
 public class PlotMapInfo {
 
+	public Biome Biome;
 	public int PlotSize;
 	public int PlotAutoLimit;
 	public int PathWidth;

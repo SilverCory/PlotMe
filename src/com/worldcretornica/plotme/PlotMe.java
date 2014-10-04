@@ -10,6 +10,7 @@ import com.worldcretornica.plotme.worldedit.PlotWorldEdit;
 import net.milkbowl.vault.economy.Economy;
 
 import org.bukkit.*;
+import org.bukkit.block.Biome;
 import org.bukkit.block.Block;
 import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.ConfigurationSection;
@@ -310,6 +311,7 @@ public class PlotMe extends JavaPlugin
 			plotworld.set("PlotAutoLimit", 1000);
 			plotworld.set("PathWidth", 7);
 			plotworld.set("PlotSize", 32);
+			plotworld.set("Biome", "Plains");
 			
 			plotworld.set("BottomBlockId", "7");
 			plotworld.set("WallBlockId", "44");
@@ -368,7 +370,8 @@ public class PlotMe extends JavaPlugin
 		{
 			PlotMapInfo tempPlotInfo = new PlotMapInfo();
 			ConfigurationSection currworld = worlds.getConfigurationSection(worldname);
-			
+
+			tempPlotInfo.Biome = Biome.valueOf(currworld.getString("Biome", "Plains").toUpperCase());
 			tempPlotInfo.PlotAutoLimit = currworld.getInt("PlotAutoLimit", 100);
 			tempPlotInfo.PathWidth = currworld.getInt("PathWidth", 7);
 			tempPlotInfo.PlotSize = currworld.getInt("PlotSize", 32);

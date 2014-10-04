@@ -67,7 +67,7 @@ public class Plot implements Comparable<Plot> {
         world = t.getWorld().getName();
         allowed = new PlayerList();
         denied = new PlayerList();
-        biome = Biome.PLAINS;
+        biome = PlotManager.getMap(t).Biome;
         id = tid;
 
         if (days == 0) {
@@ -96,7 +96,7 @@ public class Plot implements Comparable<Plot> {
         world = t.getWorld().getName();
         allowed = new PlayerList();
         denied = new PlayerList();
-        biome = Biome.PLAINS;
+        biome = PlotManager.getMap(t).Biome;
         id = tid;
 
         if (days == 0) {
@@ -130,7 +130,7 @@ public class Plot implements Comparable<Plot> {
         world = t.getWorld().getName();
         allowed = new PlayerList();
         denied = new PlayerList();
-        biome = Biome.PLAINS;
+        biome = PlotManager.getMap(t).Biome;
         id = tid;
 
         if (days == 0) {

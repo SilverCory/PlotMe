@@ -21,6 +21,7 @@ public class PlotGen extends ChunkGenerator {
     private short floor1;
     private short floor2;
     private int roadheight;
+	private Biome biome;
     private PlotMapInfo temppmi;
 
     public PlotGen() {
@@ -33,6 +34,7 @@ public class PlotGen extends ChunkGenerator {
         roadheight = 64;
         floor1 = 5;
         floor2 = 5;
+		biome = Biome.PLAINS;
         temppmi = null;
         PlotMe.logger.warning("Unable to find configuration, using defaults");
     }
@@ -47,6 +49,7 @@ public class PlotGen extends ChunkGenerator {
         roadheight = pmi.RoadHeight;
         floor1 = pmi.RoadMainBlockId;
         floor2 = pmi.RoadStripeBlockId;
+		biome = pmi.Biome;
         temppmi = pmi;
     }
 
@@ -87,7 +90,7 @@ public class PlotGen extends ChunkGenerator {
                 int height = roadheight + 2;
                 valz = (cz * 16 + z);
 
-                biomes.setBiome(x, z, Biome.PLAINS);
+                biomes.setBiome(x, z, biome);
 
                 for (int y = 0; y < height; y++) {
                     if (y == 0) {

@@ -5,7 +5,6 @@ import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.World;
-import org.bukkit.block.Biome;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockState;
 import org.bukkit.block.Jukebox;
@@ -83,12 +82,12 @@ public class PlotClearTask extends BukkitRunnable
 					}
 					else
 					{
-						/*if(y == (pmi.RoadHeight + 1) &&
+						if(y == (pmi.RoadHeight + 1) &&
 							(x == bottomX - 1 || x == topX + 1 || z == bottomZ - 1 || z == topZ + 1))
 						{
 
-						}*/
-						if(block.getType() != Material.AIR || block.getBiome() != Biome.PLAINS)
+						}
+						else if(block.getType() != Material.AIR || block.getBiome() != pmi.Biome)
 						{
 							blocks.add(block);
 						}
@@ -120,9 +119,9 @@ public class PlotClearTask extends BukkitRunnable
 						block.getChunk().load(true);
 					}
 
-					if (block.getBiome() != Biome.PLAINS)
+					if (block.getBiome() != pmi.Biome)
 					{
-						block.setBiome(Biome.PLAINS);
+						block.setBiome(pmi.Biome);
 					}
 
 					BlockState state = block.getState();
