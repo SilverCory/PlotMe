@@ -133,5 +133,12 @@
             <artifactId>Essentials</artifactId>
             <version>2.14-SNAPSHOT</version>
         </dependency>
+        <dependency>
+            <groupId>com.wimbli.WorldBorder</groupId>
+            <artifactId>WorldBorder</artifactId>
+            <version>1.8.1</version>
+            <scope>system</scope>
+            <systemPath>${basedir}/lib/WorldBorder.jar</systemPath>
+        </dependency>
     </dependencies>
 </project>

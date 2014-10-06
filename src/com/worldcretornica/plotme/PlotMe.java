@@ -832,6 +832,7 @@ public class PlotMe extends JavaPlugin
 		properties.put("MsgPlotAsyncRunning","is busy processing another task.");
 		properties.put("MsgAsyncOperationLimit","The server is currently processing the maximum number of plots. Try again later!");
 		properties.put("MsgCommandCooldown","You may use that command in");
+		properties.put("MsgPlotOutsideBorder", "is outside the world border.");
 		
 		properties.put("ConsoleHelpMain", " ---==PlotMe Console Help Page==---");
 		properties.put("ConsoleHelpReload", " - Reloads the plugin and its configuration files");

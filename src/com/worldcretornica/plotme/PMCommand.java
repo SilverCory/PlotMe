@@ -1,5 +1,8 @@
 package com.worldcretornica.plotme;
 
+import com.wimbli.WorldBorder.BorderData;
+import com.wimbli.WorldBorder.Config;
+import com.wimbli.WorldBorder.WorldBorder;
 import com.worldcretornica.plotme.utils.MinecraftFontWidthCalculator;
 
 import net.milkbowl.vault.economy.EconomyResponse;
@@ -15,6 +18,7 @@ import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
+import org.bukkit.plugin.Plugin;
 import org.bukkit.scheduler.BukkitRunnable;
 
 import java.util.*;
@@ -1684,11 +1688,31 @@ public class PMCommand implements CommandExecutor {
 					} else {
 						PlotMapInfo pmi = PlotManager.getMap(w);
 						int limit = pmi.PlotAutoLimit;
+						Plugin worldBorder = Bukkit.getPluginManager().getPlugin("WorldBorder");
+						Object borderData = null;
+
+						if (worldBorder != null && !Config.isPlayerBypassing(p.getUniqueId())) {
+							borderData = ((WorldBorder) worldBorder).getWorldBorder(w.getName());
+						}
 
 						for (int i = 0; i < limit; i++) {
 							for (int x = -i; x <= i; x++) {
 								for (int z = -i; z <= i; z++) {
 									String id = "" + x + ";" + z;
+
+									if (borderData != null) {
+										Location northWestCorner = PlotManager.getPlotBottomLoc(w, id);
+										Location southWestCorner = northWestCorner.add(0, 0, pmi.PlotSize);
+										Location southEastCorner = PlotManager.getPlotTopLoc(w, id);
+										Location northEastCorner = southEastCorner.subtract(0, 0, pmi.PlotSize);
+										BorderData border = (BorderData) borderData;
+
+										if (!border.insideBorder(northWestCorner) || !border.insideBorder(southWestCorner) ||
+												!border.insideBorder(southEastCorner) || !border.insideBorder(northEastCorner)) {
+
+											continue;
+										}
+									}
 
 									if (PlotManager.isPlotAvailable(id, w)) {
 										String name = p.getName();
@@ -1853,6 +1877,23 @@ public class PMCommand implements CommandExecutor {
 					} else {
 						World w = p.getWorld();
 						PlotMapInfo pmi = PlotManager.getMap(w);
+
+						if (Bukkit.getPluginManager().isPluginEnabled("WorldBorder") &&
+								!Config.isPlayerBypassing(p.getUniqueId())) {
+
+							Location northWestCorner = PlotManager.getPlotBottomLoc(w, id);
+							Location southWestCorner = northWestCorner.add(0, 0, pmi.PlotSize);
+							Location southEastCorner = PlotManager.getPlotTopLoc(w, id);
+							Location northEastCorner = southEastCorner.subtract(0, 0, pmi.PlotSize);
+							BorderData borderData = ((WorldBorder) Bukkit.getPluginManager().getPlugin("WorldBorder")).getWorldBorder(w.getName());
+
+							if (!borderData.insideBorder(northWestCorner) || !borderData.insideBorder(southWestCorner) ||
+									!borderData.insideBorder(southEastCorner) || !borderData.insideBorder(northEastCorner)) {
+
+								Send(p, RED + C("MsgThisPlot") + "(" + id + ") " + C("MsgPlotOutsideBorder"));
+								return true;
+							}
+						}
 
 						double price = 0;
 
