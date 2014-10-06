@@ -1,5 +1,6 @@
 package com.worldcretornica.plotme;
 
+import com.earth2me.essentials.Essentials;
 import com.wimbli.WorldBorder.BorderData;
 import com.wimbli.WorldBorder.Config;
 import com.wimbli.WorldBorder.WorldBorder;
@@ -2030,6 +2031,11 @@ public class PMCommand implements CommandExecutor {
 										}
 									}
 
+									if (Bukkit.getPluginManager().isPluginEnabled("Essentials")) {
+										Essentials ess = (Essentials) Bukkit.getPluginManager().getPlugin("Essentials");
+										ess.getUser(p).setLastLocation(p.getLocation());
+									}
+
 									p.teleport(PlotManager.getPlotHome(w, plot));
 
 									if (price != 0) {
@@ -2138,6 +2144,11 @@ public class PMCommand implements CommandExecutor {
 										Send(p, RED + C("MsgNotEnoughTp") + " " + C("WordMissing") + " " + RESET + f(price - balance, false));
 										return true;
 									}
+								}
+
+								if (Bukkit.getPluginManager().isPluginEnabled("Essentials")) {
+									Essentials ess = (Essentials) Bukkit.getPluginManager().getPlugin("Essentials");
+									ess.getUser(p).setLastLocation(p.getLocation());
 								}
 
 								p.teleport(PlotManager.getPlotHome(w, plot));
