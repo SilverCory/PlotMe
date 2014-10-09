@@ -32,6 +32,7 @@ public class PMCommand implements CommandExecutor {
 	private final ChatColor AQUA = ChatColor.AQUA;
 	private final ChatColor GREEN = ChatColor.GREEN;
 	private final ChatColor ITALIC = ChatColor.ITALIC;
+	private final ChatColor GRAY = ChatColor.GRAY;
 	private final String PREFIX = PlotMe.PREFIX;
 	private final String LOG = "[" + PlotMe.NAME + " Event] ";
 	private final boolean isAdv = PlotMe.advancedlogging;
@@ -1126,70 +1127,78 @@ public class PMCommand implements CommandExecutor {
 					Send(p, C("MsgListOfPlotsWhereYou"));
 				}
 
-				for (Plot plot : PlotManager.getPlots(p).values()) {
-					StringBuilder addition = new StringBuilder();
+				for (World w : Bukkit.getWorlds()) {
+					Map<String, Plot> plots = PlotManager.getPlots(w);
 
-					if (plot.expireddate != null) {
-						java.util.Date tempdate = plot.expireddate;
-
-						if (tempdate.compareTo(Calendar.getInstance().getTime()) < 0) {
-							addition.append(RED + " @" + plot.expireddate.toString() + RESET);
-						} else {
-							addition.append(" @" + plot.expireddate.toString());
-						}
+					if (plots == null || plots.isEmpty()) {
+						continue;
 					}
 
-					if (plot.auctionned) {
-						addition.append(" " + C("WordAuction") + ": " + GREEN + round(plot.currentbid) + RESET + ((plot.currentbidder != null && !plot.currentbidder.equals("")) ? " " + plot.currentbidder : ""));
-					}
+					for (Plot plot : plots.values()) {
+						StringBuilder addition = new StringBuilder();
 
-					if (plot.forsale) {
-						addition.append(" " + C("WordSell") + ": " + GREEN + round(plot.customprice) + RESET);
-					}
+						if (plot.expireddate != null) {
+							java.util.Date tempdate = plot.expireddate;
 
-					if (plot.owner.equalsIgnoreCase(name)) {
-						if (plot.allowedcount() == 0) {
-							if (name.equalsIgnoreCase(pname)) {
-								p.sendMessage("  " + plot.id + " -> " + BLUE + ITALIC + C("WordYours") + RESET + addition);
+							if (tempdate.compareTo(Calendar.getInstance().getTime()) < 0) {
+								addition.append(RED + " @" + plot.expireddate.toString() + RESET);
 							} else {
-								p.sendMessage("  " + plot.id + " -> " + BLUE + ITALIC + plot.owner + RESET + addition);
+								addition.append(" @" + plot.expireddate.toString());
 							}
-						} else {
+						}
+
+						if (plot.auctionned) {
+							addition.append(" " + C("WordAuction") + ": " + GREEN + round(plot.currentbid) + RESET + ((plot.currentbidder != null && !plot.currentbidder.equals("")) ? " " + plot.currentbidder : ""));
+						}
+
+						if (plot.forsale) {
+							addition.append(" " + C("WordSell") + ": " + GREEN + round(plot.customprice) + RESET);
+						}
+
+						if (plot.owner.equalsIgnoreCase(name)) {
+							if (plot.allowedcount() == 0) {
+								if (name.equalsIgnoreCase(pname)) {
+									p.sendMessage("  " + GRAY + w.getName() + "(" + GREEN + plot.id + GRAY + ")" + RESET + " -> " + BLUE + ITALIC + C("WordYours") + RESET + addition);
+								} else {
+									p.sendMessage("  " + GRAY + w.getName() + "(" + GREEN + plot.id + GRAY + ")" + RESET + " -> " + BLUE + ITALIC + plot.owner + RESET + addition);
+								}
+							} else {
+								StringBuilder helpers = new StringBuilder();
+								for (int i = 0; i < plot.allowedcount(); i++) {
+									helpers.append(BLUE).append(plot.allowed().toArray()[i]).append(RESET).append(", ");
+								}
+								if (helpers.length() > 2) {
+									helpers.delete(helpers.length() - 2, helpers.length());
+								}
+
+								if (name.equalsIgnoreCase(pname)) {
+									p.sendMessage("  " + GRAY + w.getName() + "(" + GREEN + plot.id + GRAY + ")" + RESET + " -> " + BLUE + ITALIC + C("WordYours") + RESET + addition + ", " + C("WordHelpers") + ": " + helpers);
+								} else {
+									p.sendMessage("  " + GRAY + w.getName() + "(" + GREEN + plot.id + GRAY + ")" + RESET + " -> " + BLUE + ITALIC + plot.owner + RESET + addition + ", " + C("WordHelpers") + ": " + helpers);
+								}
+							}
+						} else if (plot.isAllowedConsulting(name)) {
 							StringBuilder helpers = new StringBuilder();
 							for (int i = 0; i < plot.allowedcount(); i++) {
-								helpers.append(BLUE).append(plot.allowed().toArray()[i]).append(RESET).append(", ");
+								if (p.getName().equalsIgnoreCase((String) plot.allowed().toArray()[i])) {
+									if (name.equalsIgnoreCase(pname)) {
+										helpers.append(BLUE).append(ITALIC).append("You").append(RESET).append(", ");
+									} else {
+										helpers.append(BLUE).append(ITALIC).append(args[1]).append(RESET).append(", ");
+									}
+								} else {
+									helpers.append(BLUE).append(plot.allowed().toArray()[i]).append(RESET).append(", ");
+								}
 							}
 							if (helpers.length() > 2) {
 								helpers.delete(helpers.length() - 2, helpers.length());
 							}
 
-							if (name.equalsIgnoreCase(pname)) {
-								p.sendMessage("  " + plot.id + " -> " + BLUE + ITALIC + C("WordYours") + RESET + addition + ", " + C("WordHelpers") + ": " + helpers);
+							if (plot.owner.equalsIgnoreCase(pname)) {
+								p.sendMessage("  " + GRAY + w.getName() + "(" + GREEN + plot.id + GRAY + ")" + RESET + " -> " + BLUE + C("WordYours") + RESET + addition + ", " + C("WordHelpers") + ": " + helpers);
 							} else {
-								p.sendMessage("  " + plot.id + " -> " + BLUE + ITALIC + plot.owner + RESET + addition + ", " + C("WordHelpers") + ": " + helpers);
+								p.sendMessage("  " + GRAY + w.getName() + "(" + GREEN + plot.id + GRAY + ")" + RESET + " -> " + BLUE + plot.owner + C("WordPossessive") + RESET + addition + ", " + C("WordHelpers") + ": " + helpers);
 							}
-						}
-					} else if (plot.isAllowedConsulting(name)) {
-						StringBuilder helpers = new StringBuilder();
-						for (int i = 0; i < plot.allowedcount(); i++) {
-							if (p.getName().equalsIgnoreCase((String) plot.allowed().toArray()[i])) {
-								if (name.equalsIgnoreCase(pname)) {
-									helpers.append(BLUE).append(ITALIC).append("You").append(RESET).append(", ");
-								} else {
-									helpers.append(BLUE).append(ITALIC).append(args[1]).append(RESET).append(", ");
-								}
-							} else {
-								helpers.append(BLUE).append(plot.allowed().toArray()[i]).append(RESET).append(", ");
-							}
-						}
-						if (helpers.length() > 2) {
-							helpers.delete(helpers.length() - 2, helpers.length());
-						}
-
-						if (plot.owner.equalsIgnoreCase(pname)) {
-							p.sendMessage("  " + plot.id + " -> " + BLUE + C("WordYours") + RESET + addition + ", " + C("WordHelpers") + ": " + helpers);
-						} else {
-							p.sendMessage("  " + plot.id + " -> " + BLUE + plot.owner + C("WordPossessive") + RESET + addition + ", " + C("WordHelpers") + ": " + helpers);
 						}
 					}
 				}
