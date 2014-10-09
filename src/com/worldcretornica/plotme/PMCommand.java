@@ -380,12 +380,14 @@ public class PMCommand implements CommandExecutor {
 						if (plot.owner.equalsIgnoreCase(buyer)) {
 							Send(p, RED + C("MsgCannotBuyOwnPlot"));
 						} else {
+							PlotMapInfo pmi = PlotManager.getMap(l);
 							int plotlimit = PlotMe.getPlotLimit(p);
+							int ownedplots = pmi.LimitPerWorld ? PlotManager.getNbOwnedPlot(p) : PlotManager.getNbOwnedPlotTotal(p);
 
-							if (plotlimit != -1 && PlotManager.getNbOwnedPlot(p) >= plotlimit) {
+							if (plotlimit != -1 && ownedplots >= plotlimit) {
 								Send(p, C("MsgAlreadyReachedMaxPlots") + " (" +
-										        PlotManager.getNbOwnedPlot(p) + "/" + PlotMe.getPlotLimit(p) + "). " +
-										        C("WordUse") + " " + RED + "/plotme " + C("CommandHome") + RESET + " " + C("MsgToGetToIt"));
+										ownedplots + "/" + PlotMe.getPlotLimit(p) + "). " +
+										C("WordUse") + " " + RED + "/plotme " + C("CommandHome") + RESET + " " + C("MsgToGetToIt"));
 							} else {
 								World w = p.getWorld();
 
@@ -1376,14 +1378,21 @@ public class PMCommand implements CommandExecutor {
 					}
 
 					int maxplots = PlotMe.getPlotLimit(p);
-					int ownedplots = PlotManager.getNbOwnedPlot(p, w);
+					int ownedplots;
+					String msg = "";
+
+					if (pmi != null && pmi.LimitPerWorld) {
+						ownedplots = PlotManager.getNbOwnedPlot(p, w);
+						msg += GREEN + C("HelpYourPlotLimitWorld");
+					} else {
+						ownedplots = PlotManager.getNbOwnedPlotTotal(p);
+						msg += GREEN + C("HelpYourPlotLimit");
+					}
 
 					if (maxplots == -1) {
-						p.sendMessage(GREEN + C("HelpYourPlotLimitWorld") + " : " + AQUA + ownedplots +
-								              GREEN + " " + C("HelpUsedOf") + " " + AQUA + C("WordInfinite"));
+						p.sendMessage(msg + " : " + AQUA + ownedplots + GREEN + " " + C("HelpUsedOf") + " " + AQUA + C("WordInfinite"));
 					} else {
-						p.sendMessage(GREEN + C("HelpYourPlotLimitWorld") + " : " + AQUA + ownedplots +
-								              GREEN + " " + C("HelpUsedOf") + " " + AQUA + maxplots);
+						p.sendMessage(msg + " : " + AQUA + ownedplots + GREEN + " " + C("HelpUsedOf") + " " + AQUA + maxplots);
 					}
 				} else {
 					p.sendMessage(GREEN + C("HelpYourPlotLimitWorld") + " : " + AQUA + C("MsgNotPlotWorld"));
@@ -1683,11 +1692,15 @@ public class PMCommand implements CommandExecutor {
 
 					if (w == null) {
 						Send(p, RED + C("MsgNoPlotworldFound"));
-					} else if (PlotManager.getNbOwnedPlot(p, w) >= PlotMe.getPlotLimit(p) && !PlotMe.cPerms(p, "PlotMe.admin")) {
-						Send(p, RED + C("MsgAlreadyReachedMaxPlots") + " (" +
-								        PlotManager.getNbOwnedPlot(p, w) + "/" + PlotMe.getPlotLimit(p) + "). " + C("WordUse") + " " + "/plotme " + C("CommandHome") + " " + C("MsgToGetToIt"));
 					} else {
 						PlotMapInfo pmi = PlotManager.getMap(w);
+						int ownedplots = pmi.LimitPerWorld ? PlotManager.getNbOwnedPlot(p, w) : PlotManager.getNbOwnedPlotTotal(p);
+
+						if (ownedplots >= PlotMe.getPlotLimit(p) && !PlotMe.cPerms(p, "PlotMe.admin")) {
+							Send(p, RED + C("MsgAlreadyReachedMaxPlots") + " (" +
+									ownedplots + "/" + PlotMe.getPlotLimit(p) + "). " + C("WordUse") + " " + "/plotme " + C("CommandHome") + " " + C("MsgToGetToIt"));
+						}
+
 						int limit = pmi.PlotAutoLimit;
 						Plugin worldBorder = Bukkit.getPluginManager().getPlugin("WorldBorder");
 						Object borderData = null;
@@ -1786,7 +1799,7 @@ public class PMCommand implements CommandExecutor {
 					Send(p, RED + C("MsgNoPlotworldFound"));
 				} else if (PlotManager.getNbOwnedPlot(p, w) >= PlotMe.getPlotLimit(p) && !PlotMe.cPerms(p, "PlotMe.admin")) {
 					Send(p, RED + C("MsgAlreadyReachedMaxPlots") + " (" +
-							        PlotManager.getNbOwnedPlot(p, w) + "/" + PlotMe.getPlotLimit(p) + "). " + C("WordUse") + " " + "/plotme " + C("CommandHome") + " " + C("MsgToGetToIt"));
+							PlotManager.getNbOwnedPlot(p, w) + "/" + PlotMe.getPlotLimit(p) + "). " + C("WordUse") + " " + "/plotme " + C("CommandHome") + " " + C("MsgToGetToIt"));
 				} else {
 					PlotMapInfo pmi = PlotManager.getMap(w);
 					int limit = pmi.PlotAutoLimit;
@@ -1870,15 +1883,15 @@ public class PMCommand implements CommandExecutor {
 						}
 					}
 
+					World w = p.getWorld();
+					PlotMapInfo pmi = PlotManager.getMap(w);
 					int plotlimit = PlotMe.getPlotLimit(p);
+					int ownedplots = pmi.LimitPerWorld ? PlotManager.getNbOwnedPlot(p) : PlotManager.getNbOwnedPlotTotal(p);
 
-					if (playername.equals(p.getName()) && plotlimit != -1 && PlotManager.getNbOwnedPlot(p) >= plotlimit) {
+					if (playername.equals(p.getName()) && plotlimit != -1 && ownedplots >= plotlimit) {
 						Send(p, RED + C("MsgAlreadyReachedMaxPlots") + " (" +
-								        PlotManager.getNbOwnedPlot(p) + "/" + PlotMe.getPlotLimit(p) + "). " + C("WordUse") + " " + RED + "/plotme " + C("CommandHome") + RESET + " " + C("MsgToGetToIt"));
+								ownedplots + "/" + PlotMe.getPlotLimit(p) + "). " + C("WordUse") + " " + RED + "/plotme " + C("CommandHome") + RESET + " " + C("MsgToGetToIt"));
 					} else {
-						World w = p.getWorld();
-						PlotMapInfo pmi = PlotManager.getMap(w);
-
 						if (Bukkit.getPluginManager().isPluginEnabled("WorldBorder") &&
 								!Config.isPlayerBypassing(p.getUniqueId())) {
 

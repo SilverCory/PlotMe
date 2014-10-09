@@ -62,6 +62,6 @@ public class PlotMapInfo {
 	public boolean AutoLinkPlots;
 	public boolean DisableExplosion;
 	public boolean DisableIgnition;
-	
+	public boolean LimitPerWorld;
 	
 }

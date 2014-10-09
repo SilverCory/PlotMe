@@ -421,6 +421,7 @@ public class PlotMe extends JavaPlugin
 			tempPlotInfo.AutoLinkPlots = currworld.getBoolean("AutoLinkPlots", true);
 			tempPlotInfo.DisableExplosion = currworld.getBoolean("DisableExplosion", true);
 			tempPlotInfo.DisableIgnition = currworld.getBoolean("DisableIgnition", true);
+			tempPlotInfo.LimitPerWorld = currworld.getBoolean("LimitPerWorld", true);
 			
 			ConfigurationSection economysection;
 			
@@ -474,6 +475,7 @@ public class PlotMe extends JavaPlugin
 			currworld.set("AutoLinkPlots", tempPlotInfo.AutoLinkPlots);
 			currworld.set("DisableExplosion", tempPlotInfo.DisableExplosion);
 			currworld.set("DisableIgnition", tempPlotInfo.DisableIgnition);
+			currworld.set("LimitPerWorld", tempPlotInfo.LimitPerWorld);
 			
 			economysection = currworld.createSection("economy");
 			
@@ -839,6 +841,7 @@ public class PlotMe extends JavaPlugin
 		
 		properties.put("HelpTitle", "PlotMe Help Page");
 		properties.put("HelpYourPlotLimitWorld", "Your plot limit in this world");
+		properties.put("HelpYourPlotLimit", "Your plot limit");
 		properties.put("HelpUsedOf", "used of");
 		properties.put("HelpClaim", "Claims the current plot you are standing on.");
 		properties.put("HelpClaimOther", "Claims the current plot you are standing on for another player.");

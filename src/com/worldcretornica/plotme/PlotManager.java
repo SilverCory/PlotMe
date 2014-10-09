@@ -1047,6 +1047,23 @@ public class PlotManager
 		return nbfound;
 	}
 
+	public static int getNbOwnedPlotTotal(Player p)
+	{
+		return getNbOwnedPlotTotal(p.getUniqueId());
+	}
+
+	public static int getNbOwnedPlotTotal(UUID uuid)
+	{
+		int nbfound = 0;
+
+		for (World w : Bukkit.getWorlds())
+		{
+			nbfound += getNbOwnedPlot(uuid, w);
+		}
+
+		return nbfound;
+	}
+
 	public static int bottomX(String id, World w)
 	{
 		return getPlotBottomLoc(w, id).getBlockX();
