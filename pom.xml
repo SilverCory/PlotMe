@@ -49,9 +49,7 @@
         </plugins>
         <resources>
             <resource>
-                <targetPath>.</targetPath>
                 <filtering>true</filtering>
-                <directory>.</directory>
                 <includes>
                     <include>plugin.yml</include>
                 </includes>
