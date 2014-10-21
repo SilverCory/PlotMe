@@ -8,7 +8,6 @@
     <build>
         <defaultGoal>clean package install</defaultGoal>
         <finalName>PlotMe</finalName>
-        <sourceDirectory>src</sourceDirectory>
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
@@ -102,7 +101,8 @@
             <artifactId>bukkit</artifactId>
             <version>1.7.10-R0.1-SNAPSHOT</version>
             <type>jar</type>
-            <scope>provided</scope>
+            <scope>system</scope>
+            <systemPath>${basedir}/lib/spigot.jar</systemPath>
         </dependency>
         <dependency>
             <groupId>com.sk89q</groupId>
