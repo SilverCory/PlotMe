@@ -161,7 +161,7 @@ public class PlotMe extends JavaPlugin
 			pm.registerEvents(new PlotDenyListener(), this);
 		}
 				
-		getCommand("plotme").setExecutor(new PMCommand(this));
+		getCommand("plot").setExecutor(new PMCommand(this));
 		
 		initialized = true;
 		

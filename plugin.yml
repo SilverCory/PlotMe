@@ -9,7 +9,7 @@ softdepend: [WorldEdit, Vault, LWC, Essentials]
 description: >
              Handles plot creation, management and protection
 commands:
-    plotme:
+    plot:
       description: List Plot commands
       usage: /plot
       aliases: [p,plot]
